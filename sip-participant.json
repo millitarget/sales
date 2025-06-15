@@ -1,0 +1,9 @@
+{
+    "sip_trunk_id": "ST_qN6NCWqvcewY",
+    "sip_call_to": "+351933792547",
+    "room_name": "my-sip-room",
+    "participant_identity": "sip-test",
+    "participant_name": "Test Caller",
+    "krisp_enabled": true,
+    "wait_until_answered": true
+  }

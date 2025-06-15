@@ -1,0 +1,9 @@
+{
+    "trunk": {
+      "name": "sales_agent_chamada.ai",
+      "address": "TK53e342da4e49ab8893825eb6adbf8656.pstn.twilio.com",
+      "numbers": ["+351923296013"],
+      "auth_username": "salesagent",
+      "auth_password": "salesagenT2004!"
+    }
+  }

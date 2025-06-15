@@ -1,0 +1,296 @@
+# LiveKit Voice Agent Creation Guide
+
+## Overview
+This guide provides instructions for creating voice agents using LiveKit based on the Quitanda example. Follow this structure to create conversational agents that can answer calls, process information, and interact with external services.
+
+## 1. Basic Structure
+
+### Required Imports
+```python
+import asyncio, logging, os, json, re, time
+from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
+from enum import Enum
+from typing import Any, Dict, List, Optional
+from zoneinfo import ZoneInfo
+
+import aiohttp
+from dotenv import load_dotenv
+from livekit.agents import Agent, AgentSession, JobContext, cli, WorkerOptions, WorkerType
+from livekit.agents.llm import function_tool
+from livekit.plugins import openai
+from openai.types.beta.realtime.session import TurnDetection
+```
+
+### Environment Setup
+```python
+load_dotenv(".env.local")
+logging.basicConfig(level=logging.INFO,
+                    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+log = logging.getLogger("your_agent_name")
+
+# Set timezone
+try:
+    TZ = ZoneInfo("Your/Timezone")  # e.g., "America/New_York"
+except ZoneInfoNotFoundError:
+    TZ = timezone.utc
+log.info("Timezone set to: %s", TZ)
+
+# Load environment variables
+API_KEY = os.getenv("API_KEY")
+OTHER_CONFIG = os.getenv("OTHER_CONFIG")
+```
+
+## 2. State Management
+
+### Cache Implementation
+```python
+# Cache for frequently accessed data
+DATA_CACHE = {"data": None, "expires_at": None}
+CACHE_TTL = 300  # seconds (5 minutes)
+
+def get_cached_or_compute(cache_dict, compute_fn, *args, **kwargs):
+    """Returns cached data if valid, or computes and updates cache."""
+    now = datetime.now(TZ)
+    if cache_dict["data"] and cache_dict["expires_at"] and now < cache_dict["expires_at"]:
+        log.debug("Using cached data (valid until %s)", cache_dict["expires_at"])
+        return cache_dict["data"]
+    
+    # Compute new data
+    result = compute_fn(*args, **kwargs)
+    
+    # Update cache
+    cache_dict["data"] = result
+    cache_dict["expires_at"] = now + timedelta(seconds=CACHE_TTL)
+    log.debug("Cache updated, valid until %s", cache_dict["expires_at"])
+    
+    return result
+```
+
+### Metrics Tracking
+```python
+# Simple metrics tracking
+CALL_METRICS = {}
+def mark(event: str):
+    """Record timestamp for an event"""
+    CALL_METRICS[event] = datetime.now(TZ)
+```
+
+## 3. External Data Fetching
+
+```python
+async def fetch_external_data() -> None:
+    """Load external data with resilience to failures."""
+    try:
+        async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=15)) as sess:
+            try:
+                async with sess.get("YOUR_API_ENDPOINT", timeout=8) as resp:
+                    if resp.status != 200:
+                        log.error(f"Error fetching data: HTTP {resp.status}")
+                        return
+                    
+                    try:
+                        data = await resp.json(content_type=None)
+                        # Process data
+                        log.info("External data loaded successfully")
+                    except json.JSONDecodeError as e:
+                        log.error(f"Error processing JSON: {str(e)}")
+            
+            except asyncio.CancelledError:
+                log.warning("Data loading cancelled")
+    
+    except Exception as e:
+        log.error(f"Critical error loading data: {str(e)}")
+```
+
+## 4. Language and Voice Configuration
+
+### Language Customization
+```python
+# Language guidance for the model
+LANGUAGE_NUDGE = """<nudge>
+Specialized vocabulary terms and phrases for your language:
+- Term 1
+- Term 2
+- Pronunciation guide
+- Common phrases
+</nudge>"""
+
+# Examples to steer language model
+LANGUAGE_EXAMPLES = """
+Example dialogues in your target language:
+
+Customer: [Example input]
+Agent: [Example response]
+
+Customer: [Another example]
+Agent: [Another response]
+"""
+```
+
+## 5. Tool Functions for Agent
+
+```python
+@function_tool
+async def get_information(param1: str, param2: int = 0) -> dict:
+    """Tool function to retrieve information.
+    
+    Parameters:
+    - param1: Description of first parameter
+    - param2: Description of second parameter
+    
+    Returns dictionary with results
+    """
+    # Implementation
+    return {"result": "information", "status": "success"}
+
+@function_tool
+async def process_request(request_type: str, details: dict = None) -> dict:
+    """Process a specific type of request
+    
+    Returns success status and any relevant information
+    """
+    try:
+        # Implementation
+        return {"status": "success", "details": "Processed successfully"}
+    except Exception as e:
+        log.error(f"Error processing request: {str(e)}")
+        return {"status": "error", "message": str(e)}
+```
+
+## 6. Agent System Prompt
+
+```python
+def build_system_prompt() -> str:
+    """Generates system prompt with relevant data."""
+    now = datetime.now(TZ)
+    current_time = now.strftime("%H:%M")
+    current_day = now.strftime("%A")
+
+    # Include any dynamic information
+    status_info = "Current status information"
+    
+    return (
+        f"CURRENT TIME: {current_time} ({current_day})\n"
+        f"STATUS: {status_info}\n\n"
+        f"{LANGUAGE_NUDGE}\n\n"
+        f"{LANGUAGE_EXAMPLES}\n\n"
+        "ADDITIONAL GUIDELINES:\n"
+        "1. Let the customer lead the conversation\n"
+        "2. Answer questions clearly and concisely\n"
+        "3. Only ask for essential information\n"
+        "4. Maintain a professional and helpful tone\n"
+        "5. [Add more specific guidelines for your agent]\n"
+    )
+```
+
+## 7. Agent Entrypoint and Session
+
+```python
+async def entrypoint(ctx: JobContext):
+    # Record call start for metrics
+    mark("start")
+
+    # Load any necessary data
+    await fetch_external_data()
+    
+    # Configure language model
+    llm = openai.realtime.RealtimeModel(
+        model="gpt-4o-realtime-preview", 
+        voice="alloy",  # Choose appropriate voice
+        temperature=0.5,
+        turn_detection=TurnDetection(
+            type="semantic_vad", 
+            eagerness="auto",
+            create_response=True, 
+            interrupt_response=True)
+    )
+
+    # Define agent tools
+    tools = [get_information, process_request]
+
+    # Initialize agent with system prompt
+    agent = Agent(instructions=build_system_prompt(), tools=tools)
+    session = AgentSession(llm=llm)
+
+    # Connect and start session
+    await ctx.connect()
+    await session.start(agent, room=ctx.room)
+
+    # Initial greeting or instructions
+    initial_greeting = """
+    Your initial greeting and instructions for the model go here.
+    Include any specific voice/tone guidance.
+    """
+    
+    await session.generate_reply(instructions=initial_greeting)
+```
+
+## 8. Application Runner
+
+```python
+if __name__ == "__main__":
+    cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint,
+                              worker_type=WorkerType.ROOM))
+```
+
+## 9. Environment Variables (.env.local)
+
+```
+# API Keys
+OPENAI_API_KEY=your_openai_key_here
+LIVEKIT_API_KEY=your_livekit_key_here
+LIVEKIT_API_SECRET=your_livekit_secret_here
+
+# Configuration
+MENU_WEBHOOK_URL=your_webhook_url
+TRANSFER_PHONE_NUMBER=+1234567890
+
+# Add other environment variables as needed
+```
+
+## 10. Best Practices
+
+1. **Error Handling**: Implement try-except blocks for all external calls and data processing
+2. **Caching**: Cache frequently accessed data to reduce latency and API calls
+3. **Logging**: Use detailed logging for debugging and monitoring
+4. **Metrics**: Track key events with timestamps to measure performance
+5. **Timeout Management**: Set timeouts for all external API calls
+6. **Graceful Degradation**: Provide fallback responses when services are unavailable
+7. **Language Customization**: Use language nudges and examples to guide model behavior
+8. **Prompt Engineering**: Craft clear system prompts with specific instructions
+
+## 11. Testing Your Agent
+
+1. Set up a local test environment:
+   ```bash
+   # Install dependencies
+   pip install -r requirements.txt
+   
+   # Run the agent locally
+   python your_agent.py
+   ```
+
+2. Test with sample conversations
+3. Monitor logs for errors and unexpected behavior
+4. Verify all tools function correctly
+5. Test error handling by simulating API failures
+
+## 12. Deployment
+
+1. Ensure all environment variables are set correctly
+2. Deploy to your LiveKit environment
+3. Monitor initial conversations for quality
+4. Set up alerting for errors and failures
+
+## Troubleshooting Common Issues
+
+1. **Connection Problems**: Verify LiveKit credentials and network connectivity
+2. **Model API Errors**: Check API key validity and usage quotas
+3. **Tool Function Failures**: Debug external API connections
+4. **Voice Quality Issues**: Adjust voice settings and language nudges
+5. **Conversation Flow Problems**: Refine system prompt and instructions
+
+## Conclusion
+
+Follow this guide to create robust, reliable voice agents with LiveKit. Customize the components to fit your specific use case while maintaining the core structure for stability and performance. 

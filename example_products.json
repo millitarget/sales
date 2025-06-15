@@ -1,0 +1,77 @@
+[
+  {
+    "id": "p001",
+    "name": "Smartphone Galaxy X10",
+    "category": "eletronicos",
+    "price": 1299.99,
+    "description": "Smartphone de última geração com câmera de 108MP, 256GB de armazenamento e 12GB de RAM.",
+    "features": [
+      "Tela AMOLED de 6.7 polegadas",
+      "Processador octa-core 2.9GHz",
+      "Bateria de 5000mAh",
+      "Carregamento rápido 45W",
+      "Resistente à água IP68"
+    ],
+    "warranty": "12 meses"
+  },
+  {
+    "id": "p002",
+    "name": "Notebook ProBook 15",
+    "category": "informatica",
+    "price": 4599.99,
+    "description": "Notebook profissional com processador de última geração, ideal para trabalho e produtividade.",
+    "features": [
+      "Processador Intel i7 12ª geração",
+      "16GB RAM DDR5",
+      "SSD 512GB NVMe",
+      "Tela Full HD 15.6 polegadas",
+      "Windows 11 Pro"
+    ],
+    "warranty": "24 meses"
+  },
+  {
+    "id": "p003",
+    "name": "Smartwatch FitPro",
+    "category": "eletronicos",
+    "price": 499.99,
+    "description": "Relógio inteligente com monitoramento de saúde e funções esportivas.",
+    "features": [
+      "Monitor cardíaco",
+      "Medição de oxigênio no sangue",
+      "GPS integrado",
+      "Bateria com duração de 14 dias",
+      "Resistente à água até 50m"
+    ],
+    "warranty": "12 meses"
+  },
+  {
+    "id": "p004",
+    "name": "Fones de Ouvido SoundMax",
+    "category": "audio",
+    "price": 349.99,
+    "description": "Fones de ouvido sem fio com cancelamento de ruído ativo e alta qualidade sonora.",
+    "features": [
+      "Bluetooth 5.2",
+      "Cancelamento de ruído ativo",
+      "Autonomia de 30 horas",
+      "Microfones com redução de ruído",
+      "Carregamento rápido"
+    ],
+    "warranty": "12 meses"
+  },
+  {
+    "id": "p005",
+    "name": "Câmera Fotográfica ProShot 4K",
+    "category": "fotografia",
+    "price": 2899.99,
+    "description": "Câmera profissional com sensor de alta resolução e gravação em 4K.",
+    "features": [
+      "Sensor 24.2MP",
+      "Gravação em 4K 60fps",
+      "ISO 100-51200",
+      "Estabilização óptica",
+      "Wi-Fi e Bluetooth integrados"
+    ],
+    "warranty": "24 meses"
+  }
+] 
