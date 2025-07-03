@@ -1,392 +1,317 @@
 # Cold Calling Automation System
 
-A comprehensive automation platform for bulk cold calling with AI-powered conversations, automatic transcription, lead management, and intelligent scheduling. Built specifically for Portuguese B2B sales targeting restaurants and hospitality businesses.
+A powerful, production-ready cold calling automation system that combines AI-powered voice agents, automated scheduling, and comprehensive CRM features. Built with **Supabase** (backend), **Twilio** (telephony), **LiveKit** (real-time voice), and **OpenAI** (AI conversations).
 
-## 🚀 Features
+## 🚀 Key Features
 
 ### Core Functionality
-- **Bulk Cold Calling**: Automated calling of multiple leads with intelligent timing
-- **AI Sales Agent**: Portuguese-speaking AI agent (Ana Sousa) with advanced sales techniques
-- **Real-time Transcription**: Automatic call transcription and analysis
-- **Lead Management**: Complete CRM for tracking prospects and customers
-- **Smart Scheduling**: Automatic follow-up scheduling based on call outcomes
-- **Campaign Management**: Organized bulk calling campaigns with performance tracking
-- **Analytics Dashboard**: Comprehensive reporting and performance metrics
+- **Real Phone Calls**: Make actual calls via Twilio to any phone number
+- **AI Sales Agent**: Portuguese-speaking AI agent (Ana Sousa) powered by GPT-4
+- **Automated Scheduling**: Smart call scheduling with business hours compliance
+- **Call Transcription**: Automatic transcription and analysis of all calls
+- **Lead Management**: Full CRM with lead tracking and status progression
+- **Bulk Operations**: Import and call hundreds of leads automatically
+- **Campaign Management**: Organize leads into calling campaigns
+- **Real-time Dashboard**: Monitor calls and analytics in real-time
 
-### Advanced Features
-- **Intelligent Context**: AI remembers previous conversations and adapts approach
-- **Sentiment Analysis**: Real-time emotion detection during calls
-- **Pain Point Identification**: Automatic extraction of business challenges
-- **Objection Handling**: AI trained in Portuguese sales objection responses
-- **Demo Scheduling**: Automatic calendar integration for product demonstrations
-- **Multi-channel Follow-up**: Email and call coordination
-
-### Technical Capabilities
-- **Scalable Architecture**: Handle hundreds of concurrent calls
-- **LiveKit Integration**: Professional voice communication platform
-- **OpenAI GPT-4**: Advanced natural language processing
-- **Flexible Telephony**: Support for Twilio, Vonage, and other providers
-- **Cloud Storage**: Call recordings stored securely
-- **Real-time Dashboard**: Live updates and monitoring
+### Technical Features
+- **Supabase Backend**: PostgreSQL database with real-time subscriptions
+- **Twilio Integration**: Voice calls, SMS, voicemail detection
+- **LiveKit Voice**: High-quality, real-time AI voice conversations
+- **OpenAI Analysis**: Call sentiment, pain points, and outcome analysis
+- **Webhook Support**: Real-time call status updates
+- **Call Recording**: Automatic recording with cloud storage
+- **API Access**: RESTful API for third-party integrations
 
 ## 📋 Prerequisites
 
 - Python 3.9 or higher
-- OpenAI API key (for AI agent and transcription analysis)
-- LiveKit account (for voice communication)
-- Telephony provider account (Twilio, Vonage, etc.)
-- Redis (for task queue management)
+- Supabase account (free tier works)
+- Twilio account with phone number
+- LiveKit Cloud account or self-hosted server
+- OpenAI API key
+- ngrok (for local development)
 
-## 🛠 Installation
+## 🛠️ Complete Setup Guide
 
-### 1. Clone the Repository
+### 1. Clone and Install
+
 ```bash
+# Clone the repository
 git clone <repository-url>
-cd cold-calling-automation
-```
+cd cold-calling-system
 
-### 2. Install Dependencies
-```bash
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install dependencies
 pip install -r requirements.txt
 ```
 
-### 3. Configure Environment
-```bash
-# Copy the example configuration
-cp .env.local.example .env.local
+### 2. Supabase Setup
 
-# Edit with your API keys and settings
-nano .env.local
+1. Create a new Supabase project at [supabase.com](https://supabase.com)
+
+2. In your Supabase dashboard, go to SQL Editor and run the entire contents of `supabase_schema.sql`
+
+3. Get your credentials:
+   - Go to Settings → API
+   - Copy the `URL` and `anon public` key
+
+### 3. Twilio Setup
+
+1. Sign up at [twilio.com](https://twilio.com)
+
+2. Buy a phone number with voice capabilities
+
+3. Get your credentials:
+   - Account SID (from dashboard)
+   - Auth Token (from dashboard)
+   - Phone Number (format: +1234567890)
+
+### 4. LiveKit Setup
+
+1. Sign up at [livekit.io](https://livekit.io) or self-host
+
+2. Create a new project and get:
+   - API Key
+   - API Secret
+   - WebSocket URL (wss://your-project.livekit.cloud)
+
+### 5. OpenAI Setup
+
+1. Get API key from [platform.openai.com](https://platform.openai.com)
+
+2. Ensure you have GPT-4 access and sufficient credits
+
+### 6. Configuration
+
+1. Copy the example environment file:
+```bash
+cp .env.local.example .env.local
 ```
 
-### 4. Set Up API Keys
-Edit `.env.local` with your credentials:
-
+2. Edit `.env.local` with your credentials:
 ```env
-# Required
+# Supabase Configuration (REQUIRED)
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_KEY=your-supabase-anon-key
+
+# OpenAI Configuration
 OPENAI_API_KEY=sk-your-openai-api-key
+
+# LiveKit Configuration
 LIVEKIT_API_KEY=your-livekit-api-key
 LIVEKIT_API_SECRET=your-livekit-api-secret
-LIVEKIT_URL=wss://your-livekit-server.com
+LIVEKIT_URL=wss://your-project.livekit.cloud
 
-# Telephony Provider (choose one)
-TWILIO_ACCOUNT_SID=your-twilio-account-sid
-TWILIO_AUTH_TOKEN=your-twilio-auth-token
+# Twilio Configuration
+TWILIO_ACCOUNT_SID=your-account-sid
+TWILIO_AUTH_TOKEN=your-auth-token
 TWILIO_PHONE_NUMBER=+1234567890
 
-# Database
-DATABASE_URL=sqlite:///cold_calling.db
-
-# Optional but recommended
-REDIS_URL=redis://localhost:6379/0
+# For local development, use ngrok
+WEBHOOK_BASE_URL=https://your-ngrok-url.ngrok.io
 ```
 
-### 5. Start the System
+### 7. Database Setup
+
+The `supabase_schema.sql` file will create:
+- `leads` table for contact management
+- `calls` table for call records
+- `scheduled_calls` table for future calls
+- `call_campaigns` table for bulk campaigns
+- All necessary indexes and functions
+
+### 8. Configure Webhooks
+
+For local development:
+1. Install ngrok: `brew install ngrok` (Mac) or download from [ngrok.com](https://ngrok.com)
+2. The setup script will start ngrok automatically
+3. Copy the HTTPS URL from ngrok and update `WEBHOOK_BASE_URL`
+
+In Twilio:
+1. Go to your phone number settings
+2. Set the Voice webhook to: `https://your-domain.com/twilio/voice/{CallSid}`
+3. Set Status Callback to: `https://your-domain.com/twilio/status/{CallSid}`
+
+## 🏃‍♂️ Running the System
+
+### Automated Setup and Run
+
 ```bash
-# Quick start with demo data
-python run_cold_calling_system.py --demo
-
-# Or start without demo
-python run_cold_calling_system.py
+python setup_and_run.py
 ```
 
-## 🎯 Quick Start Guide
+This will:
+- Check all prerequisites
+- Verify environment variables
+- Test Supabase connection
+- Import sample data
+- Start all services
+- Setup ngrok tunnel (if needed)
+
+### Manual Start
+
+```bash
+# Terminal 1: Start the Flask app
+python real_app.py
+
+# Terminal 2: Start the LiveKit agent
+python real_sales_agent.py
+
+# Terminal 3: Start ngrok (for local dev)
+ngrok http 5000
+```
+
+## 📱 Using the System
 
 ### 1. Access the Dashboard
-Open your browser to `http://localhost:5000`
+
+Open http://localhost:5000 in your browser
 
 ### 2. Import Leads
-- Click "Import Leads" in the sidebar
-- Upload the provided `sample_leads.csv` or create your own
-- CSV format: `first_name,last_name,company_name,phone_number,email,title,city,business_type`
 
-### 3. Start Bulk Calling
-- Click "Start Bulk Calling" 
-- Select leads to call
-- Choose campaign settings
-- Monitor progress in real-time
+- **Manual**: Go to Leads → New Lead
+- **Bulk Import**: Leads → Import CSV
+- **Sample Data**: Already imported if using setup script
 
-### 4. Review Results
-- View call transcriptions
-- Check lead status updates
-- Review scheduled follow-ups
-- Analyze performance metrics
+### 3. Make Test Call
 
-## 📊 System Architecture
+1. Select a lead from the dashboard
+2. Click "Call Now"
+3. Monitor real-time status
+4. View transcription when complete
 
-### Components
+### 4. Bulk Calling
 
-1. **Web Application** (`app.py`)
-   - Flask-based dashboard and API
-   - Lead and campaign management
-   - Real-time monitoring
+1. Go to Campaigns
+2. Create new campaign
+3. Add leads to campaign
+4. Click "Start Campaign"
+5. System will automatically call all leads
 
-2. **Call Manager** (`call_manager.py`)
-   - Individual call initiation and management
-   - LiveKit integration
-   - Transcription processing
+### 5. Monitor Analytics
 
-3. **Call Scheduler** (`call_scheduler.py`)
-   - Bulk calling orchestration
-   - Automatic follow-up scheduling
-   - Campaign timing management
+- Dashboard shows real-time stats
+- View call recordings and transcriptions
+- Export reports as needed
 
-4. **Sales Agent** (`sales_agent.py`)
-   - Portuguese AI sales representative
-   - Advanced conversation handling
-   - Cultural and business context awareness
+## 🔧 API Usage
 
-5. **Database Models** (`models.py`)
-   - Lead management
-   - Call history and transcriptions
-   - Campaign tracking
-   - Scheduling system
+### Initiate a Call
 
-### Data Flow
-
-```
-Leads Import → Campaign Creation → Bulk Scheduling → 
-AI Calls → Transcription → Analysis → Follow-up Scheduling
+```bash
+curl -X POST http://localhost:5000/api/leads/{lead_id}/call \
+  -H "Content-Type: application/json" \
+  -d '{"context": "Follow up on previous conversation"}'
 ```
 
-## 🎨 User Interface
+### Get Call Status
 
-### Dashboard
-- Real-time statistics and KPIs
-- Recent call activity
-- Upcoming scheduled calls
-- Campaign performance
-- Quick action buttons
+```bash
+curl http://localhost:5000/api/calls/{call_id}/status
+```
 
-### Lead Management
-- Complete prospect database
-- Call history and notes
-- Status tracking
-- Contact information management
+### Bulk Import Leads
 
-### Campaign Management
-- Bulk calling campaigns
-- Performance metrics
-- Scheduling configuration
-- Script management
+```bash
+curl -X POST http://localhost:5000/leads/bulk-import \
+  -F "file=@leads.csv"
+```
 
-### Analytics
-- Call volume and success rates
-- Conversion funnel analysis
-- Performance over time
-- ROI calculations
+## 🏗️ Architecture
 
-## 🤖 AI Sales Agent (Ana Sousa)
+```
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│   Web Browser   │────▶│   Flask App     │────▶│    Supabase     │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+                               │                          │
+                               ▼                          │
+                        ┌─────────────────┐              │
+                        │     Twilio      │              │
+                        └─────────────────┘              │
+                               │                          │
+                               ▼                          │
+                        ┌─────────────────┐              │
+                        │    LiveKit      │◀─────────────┘
+                        └─────────────────┘
+                               │
+                               ▼
+                        ┌─────────────────┐
+                        │  AI Sales Agent │
+                        │   (OpenAI)      │
+                        └─────────────────┘
+```
 
-### Personality & Approach
-- **Name**: Ana Sousa from Chamada AI
-- **Language**: Native Portuguese (European)
-- **Tone**: Professional, warm, consultative
-- **Specialty**: Restaurant automation solutions
+## 🔒 Security Considerations
 
-### Sales Methodology
-- **SPIN Selling**: Situation, Problem, Implication, Need-payoff
-- **Cultural Sensitivity**: Portuguese business etiquette
-- **Objection Handling**: Trained responses to common concerns
-- **Value Proposition**: Focus on revenue increase and automation
+1. **Environment Variables**: Never commit `.env.local` to version control
+2. **API Keys**: Use environment-specific keys
+3. **Webhooks**: Validate Twilio signatures in production
+4. **Database**: Enable RLS (Row Level Security) in Supabase
+5. **Recording Storage**: Encrypt call recordings at rest
 
-### Conversation Flow
-1. **Opening**: Professional introduction with permission request
-2. **Discovery**: Understand current reservation management
-3. **Pain Points**: Identify lost calls and inefficiencies
-4. **Solution**: Present automated reservation system benefits
-5. **Close**: Schedule demo or follow-up call
+## � Production Deployment
 
-## 📈 Performance Optimization
+### Recommended Setup
 
-### Call Quality
-- Optimal timing based on business hours
-- Rate limiting to avoid overwhelming prospects
-- Intelligent retry logic for busy/no-answer scenarios
+1. **Database**: Use Supabase Pro for better performance
+2. **Application**: Deploy to AWS/GCP/Azure with auto-scaling
+3. **LiveKit**: Use LiveKit Cloud or dedicated server
+4. **Webhooks**: Use proper domain with SSL
+5. **Monitoring**: Set up error tracking (Sentry)
+6. **Backups**: Enable automatic Supabase backups
 
-### Scalability
-- Asynchronous call processing
-- Database optimization for large lead volumes
-- Efficient scheduling algorithms
+### Environment Variables for Production
 
-### Monitoring
-- Real-time call status tracking
-- Performance metrics and alerts
-- Error handling and recovery
-
-## 🔧 Customization
-
-### Sales Scripts
-Modify `sales_agent.py` to customize:
-- Opening statements
-- Product positioning
-- Objection responses
-- Closing techniques
-
-### Call Timing
-Adjust in `.env.local`:
 ```env
-BUSINESS_START_TIME=09:00
-BUSINESS_END_TIME=18:00
-WORKING_DAYS=monday,tuesday,wednesday,thursday,friday
-MAX_CALLS_PER_HOUR=20
+DEBUG=false
+TESTING=false
+LOG_LEVEL=WARNING
+ENABLE_API_AUTHENTICATION=true
+SESSION_TIMEOUT_MINUTES=60
 ```
 
-### Lead Scoring
-Configure lead prioritization:
-- Recent engagement
-- Company size
-- Geographic location
-- Industry segment
-
-## 🔐 Security & Compliance
-
-### Data Protection
-- Encrypted call recordings
-- GDPR compliance features
-- Secure API access
-- Call data retention policies
-
-### Privacy
-- Do-not-call list management
-- Consent tracking
-- Data anonymization options
-
-## 📞 Telephony Integration
-
-### Supported Providers
-- **Twilio**: Full integration with voice, SMS, and recording
-- **Vonage**: Voice calling and recording capabilities
-- **Custom SIP**: Direct SIP trunk integration
-
-### Call Features
-- Automatic dialing
-- Call recording
-- Real-time transcription
-- Conference calling for demos
-- Voicemail detection
-
-## 📊 Analytics & Reporting
-
-### Key Metrics
-- **Call Volume**: Daily, weekly, monthly statistics
-- **Success Rates**: Connection and conversion percentages
-- **Lead Quality**: Scoring and segmentation analysis
-- **Revenue Impact**: Closed deals and pipeline value
-
-### Reports
-- Daily activity summaries
-- Campaign performance analysis
-- Sales team leaderboards
-- ROI calculations
-
-## 🚨 Troubleshooting
+## 🐛 Troubleshooting
 
 ### Common Issues
 
-**Database Connection Error**
-```bash
-# Reset database
-rm cold_calling.db
-python run_cold_calling_system.py
+1. **"Failed to connect to Supabase"**
+   - Check SUPABASE_URL and SUPABASE_KEY
+   - Ensure database schema is created
+
+2. **"Twilio webhook error"**
+   - Verify WEBHOOK_BASE_URL is accessible
+   - Check Twilio webhook configuration
+
+3. **"LiveKit agent not starting"**
+   - Verify LiveKit credentials
+   - Check Python dependencies
+
+4. **"No audio in calls"**
+   - Ensure LiveKit is properly configured
+   - Check firewall/network settings
+
+### Debug Mode
+
+Set in `.env.local`:
+```env
+DEBUG=true
+LOG_LEVEL=DEBUG
 ```
 
-**Missing Dependencies**
-```bash
-pip install -r requirements.txt
-```
+## � Support
 
-**API Key Issues**
-- Verify OpenAI API key has sufficient credits
-- Check LiveKit credentials and server status
-- Confirm telephony provider account status
+- **Documentation**: See `/docs` folder
+- **Issues**: GitHub Issues
+- **Email**: support@example.com
 
-**Call Quality Issues**
-- Check internet connection stability
-- Verify microphone and audio settings
-- Test with smaller batch sizes first
+## 📄 License
 
-### Logs and Debugging
-```bash
-# Enable debug mode
-python run_cold_calling_system.py --debug
-
-# Check logs
-tail -f logs/cold_calling.log
-```
-
-## 🤝 Contributing
-
-### Development Setup
-```bash
-# Install development dependencies
-pip install -r requirements-dev.txt
-
-# Run tests
-python -m pytest tests/
-
-# Code formatting
-black .
-flake8 .
-```
-
-### Adding Features
-1. Create feature branch
-2. Implement changes with tests
-3. Update documentation
-4. Submit pull request
-
-## 📝 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 📞 Support
-
-For support and questions:
-- Create an issue in the GitHub repository
-- Check the troubleshooting section
-- Review the API documentation
-
-## 🚀 Deployment
-
-### Production Setup
-1. **Environment Configuration**
-   - Use PostgreSQL instead of SQLite
-   - Configure Redis for production
-   - Set up proper logging
-
-2. **Security**
-   - Use environment variables for secrets
-   - Enable SSL/TLS
-   - Configure firewall rules
-
-3. **Scaling**
-   - Deploy on cloud infrastructure
-   - Use load balancers for high availability
-   - Implement monitoring and alerting
-
-### Docker Deployment
-```bash
-# Build and run with Docker
-docker-compose up -d
-```
-
-## 📋 API Documentation
-
-### REST Endpoints
-- `GET /api/leads` - Retrieve leads
-- `POST /api/leads` - Create new lead
-- `POST /api/bulk-call` - Start bulk calling
-- `GET /api/calls/{id}/status` - Check call status
-- `POST /api/calls/{id}/complete` - Mark call complete
-
-### Webhooks
-- Call completion notifications
-- Lead status updates
-- Campaign progress reports
+[Your License Here]
 
 ---
 
-**Built with ❤️ for Portuguese B2B sales teams**
-
-Transform your cold calling process with AI-powered automation and intelligent conversation management. 
+**Note**: This system is designed for legitimate sales and customer service purposes. Always comply with local regulations regarding automated calling and obtain proper consent before calling. 

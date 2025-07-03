@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+
+{% block title %}Leads Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h2">Lead Management</h1>
+        </div>
+        <div class="col text-end">
+            <button class="btn btn-success me-2" onclick="window.location.href='/leads/new'">
+                <i class="bi bi-plus-circle"></i> New Lead
+            </button>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#importModal">
+                <i class="bi bi-upload"></i> Import CSV
+            </button>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <select class="form-select" id="statusFilter" onchange="filterLeads()">
+                <option value="">All Statuses</option>
+                {% for status in lead_statuses %}
+                <option value="{{ status }}" {% if status_filter == status %}selected{% endif %}>
+                    {{ status.replace('_', ' ').title() }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <input type="text" class="form-control" placeholder="Search leads..." id="searchInput" onkeyup="searchLeads()">
+        </div>
+    </div>
+
+    <!-- Leads Table -->
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Company</th>
+                    <th>Phone</th>
+                    <th>Email</th>
+                    <th>Status</th>
+                    <th>Last Contact</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for lead in leads %}
+                <tr>
+                    <td>
+                        <a href="#" onclick="viewLead('{{ lead.id }}')">
+                            {{ lead.first_name }} {{ lead.last_name }}
+                        </a>
+                    </td>
+                    <td>{{ lead.company_name }}</td>
+                    <td>{{ lead.phone_number }}</td>
+                    <td>{{ lead.email or '-' }}</td>
+                    <td>
+                        <span class="badge bg-{{ lead.status|status_color }}">
+                            {{ lead.status.replace('_', ' ').title() }}
+                        </span>
+                    </td>
+                    <td>{{ lead.last_contacted|format_date if lead.last_contacted else 'Never' }}</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="callLead('{{ lead.id }}')">
+                            <i class="bi bi-telephone"></i> Call
+                        </button>
+                        <button class="btn btn-sm btn-secondary" onclick="editLead('{{ lead.id }}')">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Import Modal -->
+<div class="modal fade" id="importModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Import Leads from CSV</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="importForm">
+                    <div class="mb-3">
+                        <label class="form-label">Select CSV File</label>
+                        <input type="file" class="form-control" id="csvFile" accept=".csv" required>
+                    </div>
+                    <p class="text-muted small">
+                        CSV should contain columns: first_name, last_name, company_name, phone_number, email, title, city, business_type
+                    </p>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="importLeads()">Import</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lead Details Modal -->
+<div class="modal fade" id="leadModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Lead Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="leadDetails">
+                <!-- Dynamic content -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function filterLeads() {
+    const status = document.getElementById('statusFilter').value;
+    window.location.href = `/leads?status=${status}`;
+}
+
+function searchLeads() {
+    const input = document.getElementById('searchInput');
+    const filter = input.value.toUpperCase();
+    const table = document.querySelector('table tbody');
+    const rows = table.getElementsByTagName('tr');
+    
+    for (let row of rows) {
+        const text = row.textContent || row.innerText;
+        row.style.display = text.toUpperCase().indexOf(filter) > -1 ? '' : 'none';
+    }
+}
+
+function callLead(leadId) {
+    if (confirm('Start a call with this lead?')) {
+        fetch(`/api/leads/${leadId}/call`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'}
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAlert('Call initiated successfully!', 'success');
+                setTimeout(() => window.location.reload(), 2000);
+            } else {
+                showAlert('Error: ' + data.error, 'danger');
+            }
+        });
+    }
+}
+
+function importLeads() {
+    const fileInput = document.getElementById('csvFile');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        showAlert('Please select a file', 'warning');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    fetch('/leads/bulk-import', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert(`Successfully imported ${data.leads_created} leads!`, 'success');
+            setTimeout(() => window.location.reload(), 2000);
+        } else {
+            showAlert('Error: ' + data.error, 'danger');
+        }
+    });
+}
+
+function viewLead(leadId) {
+    // Implement lead details view
+    fetch(`/api/leads/${leadId}`)
+        .then(response => response.json())
+        .then(lead => {
+            // Show lead details in modal
+            const modal = new bootstrap.Modal(document.getElementById('leadModal'));
+            modal.show();
+        });
+}
+
+function editLead(leadId) {
+    window.location.href = `/leads/${leadId}/edit`;
+}
+
+// Custom Jinja2 filters simulation
+document.addEventListener('DOMContentLoaded', function() {
+    // Add status colors
+    document.querySelectorAll('[class*="bg-"]').forEach(badge => {
+        const text = badge.textContent.trim().toLowerCase();
+        if (text.includes('new')) badge.classList.add('bg-secondary');
+        else if (text.includes('contacted')) badge.classList.add('bg-info');
+        else if (text.includes('interested')) badge.classList.add('bg-success');
+        else if (text.includes('demo')) badge.classList.add('bg-primary');
+        else if (text.includes('closed won')) badge.classList.add('bg-success');
+        else if (text.includes('closed lost')) badge.classList.add('bg-danger');
+    });
+});
+</script>
+{% endblock %}
