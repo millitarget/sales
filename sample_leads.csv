@@ -1,0 +1,26 @@
+first_name,last_name,company_name,phone_number,email,title,city,postal_code,business_type,best_time_to_call,notes
+João,Silva,Restaurante Pimenta Moscada,+351912345678,joao@pimentamoscada.pt,Gerente,Lisboa,1200-001,Restaurant,mornings,Restaurante tradicional português
+Maria,Santos,Tasca da Maria,+351923456789,maria@tascadamaria.pt,Proprietária,Porto,4000-001,Restaurant,afternoons,Especialidades do Norte
+António,Ferreira,Café Central,+351934567890,antonio@cafecentral.pt,Dono,Coimbra,3000-001,Cafe,10:00-12:00,Café histórico no centro
+Luísa,Pereira,Marisqueira do Cais,+351945678901,luisa@marisqueiracais.pt,Gestora,Setúbal,2900-001,Restaurant,evenings,Especialista em marisco fresco
+Carlos,Rodrigues,Pizzaria Bella Vista,+351956789012,carlos@bellavista.pt,Proprietário,Cascais,2750-001,Restaurant,mornings,Pizzaria italiana autêntica
+Ana,Costa,Restaurante O Fado,+351967890123,ana@ofado.pt,Gerente,Lisboa,1100-001,Restaurant,afternoons,Restaurante com espetáculos de fado
+Pedro,Martins,Churrasqueira do Pedro,+351978901234,pedro@churrasqueira.pt,Dono,Braga,4700-001,Restaurant,10:00-11:00,Especialidade em grelhados
+Teresa,Oliveira,Pastelaria Doce Tentação,+351989012345,teresa@docetentacao.pt,Proprietária,Aveiro,3800-001,Bakery,mornings,Pastelaria artesanal
+Ricardo,Sousa,Taberna Real,+351990123456,ricardo@tabernareal.pt,Gerente,Óbidos,2510-001,Restaurant,afternoons,Restaurante em vila medieval
+Catarina,Almeida,Restaurante Vista Mar,+351901234567,catarina@vistamarcascais.pt,Diretora,Cascais,2750-002,Restaurant,mornings,Vista para o oceano
+Miguel,Fernandes,Adega do Miguel,+351912345679,miguel@adegamiguel.pt,Proprietário,Douro,5050-001,Restaurant,evenings,Adega com vinhos regionais
+Sofia,Ribeiro,Cantinho da Sofia,+351923456780,sofia@cantinhosofia.pt,Dona,Sintra,2710-001,Restaurant,10:00-12:00,Comida caseira tradicional
+Nuno,Carvalho,Mariscos & Companhia,+351934567891,nuno@mariscoscia.pt,Sócio-Gerente,Matosinhos,4450-001,Restaurant,afternoons,Especialistas em mariscos
+Isabel,Lima,Restaurante Dom Sebastião,+351945678902,isabel@domsebastiao.pt,Gerente,Lagos,8600-001,Restaurant,mornings,Cozinha algarvia tradicional
+Rui,Gomes,Tasca do Rui,+351956789013,rui@tascarui.pt,Proprietário,Viseu,3500-001,Restaurant,11:00-13:00,Petiscos e pratos regionais
+Helena,Machado,Café da Esquina,+351967890124,helena@cafeesquina.pt,Dona,Faro,8000-001,Cafe,mornings,Café de bairro familiar
+Bruno,Teixeira,Restaurante Mar & Terra,+351978901235,bruno@maraterra.pt,Chef-Proprietário,Nazaré,2450-001,Restaurant,afternoons,Fusão de mar e montanha
+Carla,Monteiro,Pastelaria Central,+351989012346,carla@pastelariacentral.pt,Gerente,Leiria,2400-001,Bakery,mornings,Doces conventuais famosos
+Fernando,Dias,O Petisco,+351990123457,fernando@opetisco.pt,Dono,Évora,7000-001,Restaurant,afternoons,Petiscos alentejanos
+Patrícia,Rocha,Restaurante Quinta da Patrícia,+351901234568,patricia@quintapatricia.pt,Proprietária,Amarante,4600-001,Restaurant,10:00-12:00,Restaurante rural com horta própria
+Vítor,Correia,Tabacaria & Café,+351912345680,vitor@tabacafe.pt,Gerente,Guimarães,4800-001,Cafe,mornings,Café tradicional no centro histórico
+Mónica,Baptista,Restaurante Beira Mar,+351923456781,monica@beiramar.pt,Diretora,Peniche,2520-001,Restaurant,afternoons,Vista para a baía
+Gonçalo,Mendes,Adega Regional,+351934567892,goncalo@adegaregional.pt,Proprietário,Vila Real,5000-001,Restaurant,evenings,Vinhos e petiscos da região
+Cristina,Pinto,Café Cristina,+351945678903,cristina@cafecristina.pt,Dona,Santarém,2000-001,Cafe,mornings,Café familiar há 3 gerações
+Alexandre,Freitas,Restaurante Dom Afonso,+351956789014,alexandre@domafonso.pt,Chef,Batalha,2440-001,Restaurant,11:00-13:00,Cozinha de autor portuguesa
