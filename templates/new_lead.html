@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block title %}New Lead{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <h1 class="h2 mb-4">Add New Lead</h1>
+            
+            <form id="newLeadForm" method="POST" action="/leads/new">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Lead Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">First Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="first_name" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Last Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="last_name" required>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label class="form-label">Company Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="company_name" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Title/Position</label>
+                                <input type="text" class="form-control" name="title" placeholder="e.g., Owner, Manager">
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Phone Number <span class="text-danger">*</span></label>
+                                <input type="tel" class="form-control" name="phone_number" required placeholder="+351 123 456 789">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" name="email">
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Business Type</label>
+                                <select class="form-select" name="business_type">
+                                    <option value="">Select...</option>
+                                    <option value="Restaurant">Restaurant</option>
+                                    <option value="Cafe">Cafe</option>
+                                    <option value="Bar">Bar</option>
+                                    <option value="Hotel">Hotel</option>
+                                    <option value="Catering">Catering</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">City</label>
+                                <input type="text" class="form-control" name="city" placeholder="e.g., Lisboa, Porto">
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Address</label>
+                                <textarea class="form-control" name="address" rows="2"></textarea>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Best Time to Call</label>
+                                <select class="form-select" name="best_time_to_call">
+                                    <option value="">Any time</option>
+                                    <option value="Morning (9-12)">Morning (9-12)</option>
+                                    <option value="Afternoon (12-17)">Afternoon (12-17)</option>
+                                    <option value="Evening (17-20)">Evening (17-20)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Lead Source</label>
+                                <input type="text" class="form-control" name="source" placeholder="e.g., Website, Referral, LinkedIn">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Notes</label>
+                            <textarea class="form-control" name="notes" rows="3" placeholder="Any additional information about this lead..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i> Create Lead
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="window.location.href='/leads'">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('newLeadForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Get form data
+    const formData = new FormData(this);
+    const data = {};
+    for (let [key, value] of formData.entries()) {
+        if (value) data[key] = value;
+    }
+    
+    // Submit via AJAX
+    fetch('/leads/new', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            showAlert('Lead created successfully!', 'success');
+            setTimeout(() => {
+                window.location.href = '/leads';
+            }, 1500);
+        } else {
+            showAlert('Error: ' + (result.error || 'Failed to create lead'), 'danger');
+        }
+    })
+    .catch(error => {
+        showAlert('Error: ' + error.message, 'danger');
+    });
+});
+
+// Phone number formatting
+document.querySelector('input[name="phone_number"]').addEventListener('input', function(e) {
+    // Basic formatting for Portuguese numbers
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length > 0 && !value.startsWith('351')) {
+        value = '351' + value;
+    }
+    if (value.length > 3) {
+        value = '+' + value.slice(0, 3) + ' ' + value.slice(3);
+    }
+    if (value.length > 8) {
+        value = value.slice(0, 8) + ' ' + value.slice(8);
+    }
+    if (value.length > 12) {
+        value = value.slice(0, 12) + ' ' + value.slice(12);
+    }
+    e.target.value = value;
+});
+</script>
+{% endblock %}

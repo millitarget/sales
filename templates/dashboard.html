@@ -1,0 +1,443 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Cold Calling Automation{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="mb-0">
+        <i class="fas fa-tachometer-alt me-2"></i>
+        Dashboard
+    </h1>
+    <div>
+        <button class="btn btn-success me-2" onclick="startBulkCalling()">
+            <i class="fas fa-phone-volume me-1"></i>
+            Start Bulk Calling
+        </button>
+        <button class="btn btn-primary" onclick="bulkImportModal()">
+            <i class="fas fa-upload me-1"></i>
+            Import Leads
+        </button>
+    </div>
+</div>
+
+<!-- Key Statistics -->
+<div class="row mb-4">
+    <div class="col-md-2 mb-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #3498db, #2980b9);">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-value">{{ stats.total_leads }}</div>
+            <div class="stat-label">Total Leads</div>
+        </div>
+    </div>
+    
+    <div class="col-md-2 mb-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #f39c12, #e67e22);">
+                <i class="fas fa-user-plus"></i>
+            </div>
+            <div class="stat-value">{{ stats.new_leads }}</div>
+            <div class="stat-label">New Leads</div>
+        </div>
+    </div>
+    
+    <div class="col-md-2 mb-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #27ae60, #229954);">
+                <i class="fas fa-phone"></i>
+            </div>
+            <div class="stat-value">{{ stats.contacted_leads }}</div>
+            <div class="stat-label">Contacted</div>
+        </div>
+    </div>
+    
+    <div class="col-md-2 mb-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #9b59b6, #8e44ad);">
+                <i class="fas fa-calendar-check"></i>
+            </div>
+            <div class="stat-value">{{ stats.demos_scheduled }}</div>
+            <div class="stat-label">Demos Scheduled</div>
+        </div>
+    </div>
+    
+    <div class="col-md-2 mb-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #27ae60, #2ecc71);">
+                <i class="fas fa-trophy"></i>
+            </div>
+            <div class="stat-value">{{ stats.closed_won }}</div>
+            <div class="stat-label">Closed Won</div>
+        </div>
+    </div>
+    
+    <div class="col-md-2 mb-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">
+                <i class="fas fa-percentage"></i>
+            </div>
+            <div class="stat-value">{{ stats.conversion_rate }}%</div>
+            <div class="stat-label">Conversion Rate</div>
+        </div>
+    </div>
+</div>
+
+<!-- Real-time Activity -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card h-100">
+            <div class="card-header bg-gradient text-white" style="background: linear-gradient(135deg, #2c3e50, #34495e);">
+                <h5 class="mb-0">
+                    <i class="fas fa-phone-alt me-2"></i>
+                    Recent Call Activity
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_calls %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Lead</th>
+                                <th>Company</th>
+                                <th>Status</th>
+                                <th>Outcome</th>
+                                <th>Duration</th>
+                                <th>Time</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for call in recent_calls %}
+                            <tr>
+                                <td>
+                                    <strong>{{ call.lead.first_name }} {{ call.lead.last_name }}</strong>
+                                </td>
+                                <td>{{ call.lead.company_name }}</td>
+                                <td>
+                                    <span class="badge {% if call.status.value == 'completed' %}bg-success{% elif call.status.value == 'in_progress' %}bg-warning{% elif call.status.value == 'failed' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                        {{ call.status.value.replace('_', ' ').title() }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if call.call_outcome %}
+                                    <span class="badge {% if call.call_outcome == 'interested' %}bg-success{% elif call.call_outcome == 'not_interested' %}bg-danger{% else %}bg-info{% endif %}">
+                                        {{ call.call_outcome.replace('_', ' ').title() }}
+                                    </span>
+                                    {% else %}
+                                    <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if call.duration_seconds %}
+                                    {{ (call.duration_seconds // 60) }}:{{ '{:02d}'.format(call.duration_seconds % 60) }}
+                                    {% else %}
+                                    <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small class="text-muted">
+                                        {{ call.created_at.strftime('%H:%M') if call.created_at else '-' }}
+                                    </small>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('lead_detail', lead_id=call.lead_id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if call.transcription %}
+                                    <button class="btn btn-sm btn-outline-info" onclick="showTranscription('{{ call.id }}')">
+                                        <i class="fas fa-file-alt"></i>
+                                    </button>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-phone-slash fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">No recent calls found. Start your first bulk calling campaign!</p>
+                    <button class="btn btn-primary" onclick="startBulkCalling()">
+                        <i class="fas fa-phone-volume me-1"></i>
+                        Start Calling Now
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-header bg-gradient text-white" style="background: linear-gradient(135deg, #2c3e50, #34495e);">
+                <h5 class="mb-0">
+                    <i class="fas fa-calendar-alt me-2"></i>
+                    Upcoming Scheduled Calls
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if upcoming_calls %}
+                <div class="list-group list-group-flush">
+                    {% for scheduled_call in upcoming_calls %}
+                    <div class="list-group-item border-0 px-0">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <strong>{{ scheduled_call.lead.first_name }} {{ scheduled_call.lead.last_name }}</strong>
+                                <br>
+                                <small class="text-muted">{{ scheduled_call.lead.company_name }}</small>
+                                <br>
+                                <span class="badge bg-info">{{ scheduled_call.call_type.replace('_', ' ').title() }}</span>
+                            </div>
+                            <small class="text-muted">
+                                {{ scheduled_call.scheduled_for.strftime('%m/%d %H:%M') if scheduled_call.scheduled_for else '-' }}
+                            </small>
+                        </div>
+                        {% if scheduled_call.agenda %}
+                        <small class="text-muted d-block mt-1">{{ scheduled_call.agenda[:50] }}...</small>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="text-center mt-3">
+                    <button class="btn btn-outline-primary btn-sm" onclick="showUpcomingCalls()">
+                        View All Scheduled Calls
+                    </button>
+                </div>
+                {% else %}
+                <div class="text-center py-3">
+                    <i class="fas fa-calendar-times fa-2x text-muted mb-2"></i>
+                    <p class="text-muted mb-0">No upcoming calls scheduled</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Active Campaigns and Quick Actions -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-gradient text-white" style="background: linear-gradient(135deg, #2c3e50, #34495e);">
+                <h5 class="mb-0">
+                    <i class="fas fa-bullhorn me-2"></i>
+                    Active Campaigns
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if active_campaigns %}
+                {% for campaign in active_campaigns %}
+                <div class="campaign-item mb-3 p-3 border rounded">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="mb-1">{{ campaign.name }}</h6>
+                            <p class="text-muted mb-2">{{ campaign.description[:80] }}...</p>
+                            <div class="row">
+                                <div class="col-4">
+                                    <small class="text-muted">Calls Made</small>
+                                    <div class="fw-bold">{{ campaign.calls_made }}/{{ campaign.total_leads }}</div>
+                                </div>
+                                <div class="col-4">
+                                    <small class="text-muted">Success Rate</small>
+                                    <div class="fw-bold">
+                                        {% if campaign.calls_made > 0 %}
+                                        {{ "%.1f"|format((campaign.successful_calls / campaign.calls_made * 100)) }}%
+                                        {% else %}
+                                        0%
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <small class="text-muted">Demos</small>
+                                    <div class="fw-bold">{{ campaign.demos_scheduled }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#"><i class="fas fa-eye me-2"></i>View Details</a></li>
+                                <li><a class="dropdown-item" href="#"><i class="fas fa-pause me-2"></i>Pause Campaign</a></li>
+                                <li><a class="dropdown-item text-danger" href="#"><i class="fas fa-stop me-2"></i>Stop Campaign</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="progress mt-2" style="height: 8px;">
+                        <div class="progress-bar" style="width: {% if campaign.total_leads > 0 %}{{ (campaign.calls_made / campaign.total_leads * 100) }}%{% else %}0%{% endif %}"></div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-bullhorn fa-2x text-muted mb-3"></i>
+                    <p class="text-muted">No active campaigns running</p>
+                    <a href="{{ url_for('new_campaign') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>
+                        Create Campaign
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-gradient text-white" style="background: linear-gradient(135deg, #2c3e50, #34495e);">
+                <h5 class="mb-0">
+                    <i class="fas fa-bolt me-2"></i>
+                    Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-6">
+                        <button class="btn btn-outline-primary w-100 h-100 d-flex flex-column justify-content-center align-items-center" onclick="startBulkCalling()">
+                            <i class="fas fa-phone-volume fa-2x mb-2"></i>
+                            <span>Start Bulk Calling</span>
+                        </button>
+                    </div>
+                    <div class="col-6">
+                        <button class="btn btn-outline-success w-100 h-100 d-flex flex-column justify-content-center align-items-center" onclick="bulkImportModal()">
+                            <i class="fas fa-upload fa-2x mb-2"></i>
+                            <span>Import Leads</span>
+                        </button>
+                    </div>
+                    <div class="col-6">
+                        <a href="{{ url_for('new_lead') }}" class="btn btn-outline-info w-100 h-100 d-flex flex-column justify-content-center align-items-center">
+                            <i class="fas fa-user-plus fa-2x mb-2"></i>
+                            <span>Add Lead</span>
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="{{ url_for('new_campaign') }}" class="btn btn-outline-warning w-100 h-100 d-flex flex-column justify-content-center align-items-center">
+                            <i class="fas fa-bullhorn fa-2x mb-2"></i>
+                            <span>New Campaign</span>
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="{{ url_for('analytics') }}" class="btn btn-outline-secondary w-100 h-100 d-flex flex-column justify-content-center align-items-center">
+                            <i class="fas fa-chart-line fa-2x mb-2"></i>
+                            <span>View Analytics</span>
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <button class="btn btn-outline-dark w-100 h-100 d-flex flex-column justify-content-center align-items-center" onclick="showUpcomingCalls()">
+                            <i class="fas fa-calendar-check fa-2x mb-2"></i>
+                            <span>Schedule</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Call Transcription Modal -->
+<div class="modal fade" id="transcriptionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-file-alt me-2"></i>Call Transcription</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="transcriptionContent">
+                    <div class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Show call transcription
+    async function showTranscription(callId) {
+        const modal = new bootstrap.Modal(document.getElementById('transcriptionModal'));
+        modal.show();
+        
+        try {
+            const response = await fetch(`/api/calls/${callId}/status`);
+            const call = await response.json();
+            
+            document.getElementById('transcriptionContent').innerHTML = `
+                <div class="mb-3">
+                    <h6>Call Summary</h6>
+                    <p class="text-muted">${call.summary || 'No summary available'}</p>
+                </div>
+                
+                <div class="mb-3">
+                    <h6>Call Outcome</h6>
+                    <span class="badge bg-info">${call.call_outcome || 'Unknown'}</span>
+                    ${call.sentiment_score ? `<span class="badge ${call.sentiment_score > 0 ? 'bg-success' : call.sentiment_score < 0 ? 'bg-danger' : 'bg-secondary'} ms-2">Sentiment: ${call.sentiment_score.toFixed(2)}</span>` : ''}
+                </div>
+                
+                ${call.pain_points_identified && call.pain_points_identified.length > 0 ? `
+                <div class="mb-3">
+                    <h6>Pain Points Identified</h6>
+                    <ul class="list-unstyled">
+                        ${call.pain_points_identified.map(point => `<li><i class="fas fa-exclamation-triangle text-warning me-2"></i>${point}</li>`).join('')}
+                    </ul>
+                </div>
+                ` : ''}
+                
+                ${call.objections_raised && call.objections_raised.length > 0 ? `
+                <div class="mb-3">
+                    <h6>Objections Raised</h6>
+                    <ul class="list-unstyled">
+                        ${call.objections_raised.map(objection => `<li><i class="fas fa-times-circle text-danger me-2"></i>${objection}</li>`).join('')}
+                    </ul>
+                </div>
+                ` : ''}
+                
+                <div class="mb-3">
+                    <h6>Next Action</h6>
+                    <p class="text-muted">${call.next_action || 'No next action specified'}</p>
+                </div>
+                
+                <div>
+                    <h6>Full Transcription</h6>
+                    <div class="bg-light p-3 rounded" style="max-height: 300px; overflow-y: auto;">
+                        <pre class="mb-0">${call.transcription || 'No transcription available'}</pre>
+                    </div>
+                </div>
+            `;
+        } catch (error) {
+            document.getElementById('transcriptionContent').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Failed to load call transcription
+                </div>
+            `;
+        }
+    }
+    
+    // Real-time updates for dashboard
+    function updateDashboardStats() {
+        // Update statistics cards with latest data
+        fetch('/api/dashboard-stats')
+            .then(response => response.json())
+            .then(data => {
+                // Update stat values if the API exists
+                // This would be implemented to refresh numbers without page reload
+            })
+            .catch(error => {
+                console.log('Dashboard stats update not available');
+            });
+    }
+    
+    // Auto-refresh dashboard every 30 seconds
+    setInterval(updateDashboardStats, 30000);
+</script>
+{% endblock %}
